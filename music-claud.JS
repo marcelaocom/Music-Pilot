@@ -264,3 +264,64 @@ window.salvarCrewSupabase = async function(crewObj) {
         window.carregarCrewDoSupabase();
     }
 };
+// Monitoramento de Sessão Blindado (Fim do Loop)
+supabase.auth.onAuthStateChanged(async (event, session) => {
+    const loginScreen = document.getElementById('loginScreen'); 
+    const appContainer = document.getElementById('appContainer');
+    
+    if (session) {
+        console.log("Sincronia estabelecida. Piloto na cabine:", session.user.email);
+        if(loginScreen) loginScreen.classList.add('hidden'); 
+        if(appContainer) appContainer.classList.remove('hidden');
+        
+        // Dispara o carregamento dos módulos de dados de forma segura
+        if (typeof window.carregarTransactionsDoSupabase === 'function') window.carregarTransactionsDoSupabase();
+        if (typeof window.carregarAppointmentsDoSupabase === 'function') window.carregarAppointmentsDoSupabase();
+        if (typeof window.carregarCRMDoSupabase === 'function') window.carregarCRMDoSupabase();
+        if (typeof window.carregarCrewDoSupabase === 'function') window.carregarCrewDoSupabase();
+    } else {
+        console.log("Sinal perdido. Aguardando login.");
+        if(loginScreen) loginScreen.classList.remove('hidden'); 
+        if(appContainer) appContainer.classList.add('hidden');
+    }
+});
+
+// Refatoração Blindada do Botão de Login (Elimina travamentos)
+document.addEventListener("DOMContentLoaded", () => {
+    const authForm = document.getElementById('authForm');
+    if (authForm) {
+        authForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const btn = document.getElementById('btnLogar');
+            const em = document.getElementById('loginEmail').value;
+            const pw = document.getElementById('loginPassword').value;
+            
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Conectando...';
+            btn.disabled = true;
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: em,
+                    password: pw
+                });
+
+                if (error) {
+                    alert("Acesso Negado: " + error.message);
+                    btn.innerHTML = origText; 
+                    btn.disabled = false;
+                } else {
+                    // Força a ocultação imediata do login para evitar o loop visual
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('appContainer').classList.remove('hidden');
+                    btn.innerHTML = origText; 
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert("Erro crítico no motor de login: " + err.message);
+                btn.innerHTML = origText; 
+                btn.disabled = false;
+            }
+        });
+    }
+});
