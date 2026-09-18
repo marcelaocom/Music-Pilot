@@ -174,8 +174,7 @@
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <label class="block text-[10px] font-bold text-[#B7B7B7] uppercase tracking-wider">Senha de Segurança</label>
-                        <span onclick="recuperarSenha(document.getElementById('loginEmail').value)" class="text-[10px] font-bold text-[#D9111F] hover:text-[#FF2D3F] cursor-pointer transition">Esqueceu?</span>
-                    </div>
+                        <span onclick="window.recuperarSenha(document.getElementById('loginEmail').value)" class="text-[10px] font-bold text-[#D9111F] hover:text-[#FF2D3F] cursor-pointer transition drop-shadow-[0_0_8px_rgba(217,17,31,0.6)]">Esqueceu a Senha? (Reset)</span>                    </div>
                     <div class="relative">
                         <input type="password" id="loginPassword" required class="w-full input-bg pr-10 text-sm transition" placeholder="••••••••">
                         <button type="button" onclick="togglePasswordVisibility('loginPassword', 'passwordEyeIcon')" class="absolute right-4 top-[15px] text-[#5D5D5D] hover:text-[#D9111F] transition">
