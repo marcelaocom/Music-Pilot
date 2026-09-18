@@ -71,28 +71,18 @@ window.unlockSystem = async function() {
     }
 };
 
-// Radar de Sessão em Tempo Real
-supabase.auth.onAuthStateChange((event, session) => {
-    const loginScreen = document.getElementById('loginScreen'); 
-    const appContainer = document.getElementById('appContainer');
-    const mainSidebar = document.getElementById('mainSidebar');
-    
-    if (session && session.user) {
-        if(loginScreen) loginScreen.classList.add('hidden'); 
-        if(appContainer) appContainer.classList.remove('hidden');
-        if(mainSidebar) mainSidebar.classList.remove('hidden');
-        
-        window.currentUser = session.user;
-        
-        if (window.aplicarPermissoes) window.aplicarPermissoes(session.user.email);
-        window.carregarTudoDaNuvem();
-    } else {
-        if(loginScreen) loginScreen.classList.remove('hidden'); 
-        if(appContainer) appContainer.classList.add('hidden');
-        if(mainSidebar) mainSidebar.classList.add('hidden');
-        window.currentUser = null;
-    }
-});
+// Acesso Livre para Desenvolvimento (Bypass de Login)
+const loginScreen = document.getElementById('loginScreen'); 
+const appContainer = document.getElementById('appContainer');
+const mainSidebar = document.getElementById('mainSidebar');
+
+if (loginScreen) loginScreen.classList.add('hidden');
+if (appContainer) appContainer.classList.remove('hidden');
+if (mainSidebar) mainSidebar.classList.remove('hidden');
+
+// Simulação de sessão ativa local
+window.currentUser = { id: 'dev-local', email: 'admin@medius.ai' };
+if (typeof window.renderApp === "function") window.renderApp();
 
 // =========================================================================
 // BLOCO 3: ESTADO GLOBAL E NOVO CRUD SUPABASE (Telemetria)
