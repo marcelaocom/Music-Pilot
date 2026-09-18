@@ -1,4 +1,3 @@
-"esse e o music pilot"
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -175,8 +174,7 @@
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <label class="block text-[10px] font-bold text-[#B7B7B7] uppercase tracking-wider">Senha de Segurança</label>
-                        <span onclick="recuperarSenha(document.getElementById('loginEmail').value)" class="text-[10px] font-bold text-[#D9111F] hover:text-[#FF2D3F] cursor-pointer transition">Esqueceu?</span>
-                    </div>
+                        <span onclick="window.recuperarSenha(document.getElementById('loginEmail').value)" class="text-[10px] font-bold text-[#D9111F] hover:text-[#FF2D3F] cursor-pointer transition drop-shadow-[0_0_8px_rgba(217,17,31,0.6)]">Esqueceu a Senha? (Reset)</span>                    </div>
                     <div class="relative">
                         <input type="password" id="loginPassword" required class="w-full input-bg pr-10 text-sm transition" placeholder="••••••••">
                         <button type="button" onclick="togglePasswordVisibility('loginPassword', 'passwordEyeIcon')" class="absolute right-4 top-[15px] text-[#5D5D5D] hover:text-[#D9111F] transition">
@@ -4311,35 +4309,12 @@ let btnNotas = temLogistica
         };
     </script>
 
-    <script type="module">
-        // [INÍCIO DO BLOCO - MOTOR SUPABASE E AUTENTICAÇÃO CORE]
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+<!-- MOTOR MEDIUS CORE: SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="motor.js"></script>
 
-    // 1. Credenciais Oficiais do Supabase (Insira as chaves do seu painel Supabase)
-    const SUPABASE_URL = 'SUA_SUPABASE_URL_AQUI';
-    const SUPABASE_ANON_KEY = 'SUA_SUPABASE_ANON_KEY_AQUI';
-    
-    // 2. Instancia o motor e blinda na malha (exposto globalmente para compatibilidade)
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window.supabase = supabase;
-
-    // 3. Substituição limpa das funções globais de Auth para o novo SDK
-    window.cadastrarUsuario = async function(e, s) { 
-        const { data, error } = await supabase.auth.signUp({ email: e, password: s });
-        if (error) alert("Erro: " + error.message); else alert("Conta criada com sucesso! Verifique sua caixa de entrada.");
-    };
-    
-    window.recuperarSenha = async function(e) { 
-        if (!e) { alert("Digite seu e-mail."); return; }
-        const { data, error } = await supabase.auth.resetPasswordForEmail(e);
-        if (error) alert("Erro: " + error.message); else alert("E-mail de recuperação enviado!");
-    };
-    
-    window.sairDoSistema = async function() { 
-        const { error } = await supabase.auth.signOut();
-        if (error) alert("Erro ao sair: " + error.message); else location.reload();
-    };
-    // [FIM DO BLOCO - MOTOR SUPABASE E AUTENTICAÇÃO CORE]
+<script>
+    // --- O restante do seu código de interface (hierarquia, renderização, GDE, etc) continua aqui ---
 
         // --- SISTEMA DE HIERARQUIA DE ACESSOS CORPORATIVO (5 ROLES) ---
         window.equipeRoles = JSON.parse(localStorage.getItem('equipeRoles')) || {};
@@ -4513,71 +4488,61 @@ let btnNotas = temLogistica
             }
         };
         
-        // [INÍCIO DO BLOCO - LOGIN E SESSÃO SUPABASE]
-    const authForm = document.getElementById('authForm');
-    if (authForm) {
-        authForm.addEventListener('submit', async (event) => {
-            event.preventDefault(); // PREVINE O REFRESH DA PÁGINA
-            const btn = document.getElementById('btnLogar');
-            const em = document.getElementById('loginEmail').value;
-            const pw = document.getElementById('loginPassword').value;
-            
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Conectando...';
-            btn.disabled = true;
-            
-            // Ignição de Autenticação Supabase
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: em,
-                password: pw,
+        setTimeout(window.renderizarEquipe, 500); // Renderiza no modal ao carregar
+
+        const authForm = document.getElementById('authForm');
+        if (authForm) {
+            authForm.addEventListener('submit', (event) => {
+                event.preventDefault(); // PREVINE O REFRESH DA PÁGINA (Prevenção Loop)
+                const btn = document.getElementById('btnLogar');
+                const em = document.getElementById('loginEmail').value;
+                const pw = document.getElementById('loginPassword').value;
+                
+                const origText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Conectando...';
+                btn.disabled = true;
+                
+                signInWithEmailAndPassword(auth, em, pw).then(() => {
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('appContainer').classList.remove('hidden');
+                    btn.innerHTML = origText; btn.disabled = false;
+                    
+                    if (window.carregarTransactionsDoFirestore) window.carregarTransactionsDoFirestore();
+                    if (window.carregarAppointmentsDoFirestore) window.carregarAppointmentsDoFirestore();
+                    if (window.carregarCRMDoFirestore) window.carregarCRMDoFirestore(); 
+                    if (window.carregarCrewDoFirestore) window.carregarCrewDoFirestore();
+                    if (typeof window.renderApp === "function") window.renderApp();
+                }).catch((err) => { 
+                    alert("Usuário ou senha inválidos."); 
+                    btn.innerHTML = origText; btn.disabled = false;
+                });
             });
-
-            if (error) {
-                alert("Acesso negado: " + error.message); 
-                btn.innerHTML = origText; btn.disabled = false;
-            } else {
-                // A UI será destravada pelo onAuthStateChange logo abaixo
-                btn.innerHTML = origText; btn.disabled = false;
-            }
-        });
-    }
-    
-    const btnCriarConta = document.getElementById('btnCriarConta');
-    if (btnCriarConta) {
-        btnCriarConta.addEventListener('click', () => {
-            const em = document.getElementById('loginEmail').value;
-            const pw = document.getElementById('loginPassword').value;
-            if(em && pw) window.cadastrarUsuario(em, pw);
-            else alert("Preencha e-mail e senha para criar a conta!");
-        });
-    }
-
-    // Radar de Sessão em Tempo Real do Supabase
-    supabase.auth.onAuthStateChange((event, session) => {
-        const loginScreen = document.getElementById('loginScreen'); 
-        const appContainer = document.getElementById('appContainer');
-        
-        if (session && session.user) {
-            // Sessão Ativa: Destrava a Malha
-            if(loginScreen) loginScreen.classList.add('hidden'); 
-            if(appContainer) appContainer.classList.remove('hidden');
-            
-            // Aplica regra de negócios e hierarquia via E-mail
-            if (window.aplicarPermissoes) window.aplicarPermissoes(session.user.email);
-
-            // Gatilhos para o motor de dados (serão convertidos na próxima fase)
-            if (window.carregarTransactionsDoFirestore) window.carregarTransactionsDoFirestore();
-            if (window.carregarAppointmentsDoFirestore) window.carregarAppointmentsDoFirestore();
-            if (window.carregarCrewDoFirestore) window.carregarCrewDoFirestore();
-            if (window.carregarCRMDoFirestore) window.carregarCRMDoFirestore();
-        } else {
-            // Ponto Zero: Sessão inexistente ou encerrada
-            if(loginScreen) loginScreen.classList.remove('hidden'); 
-            if(appContainer) appContainer.classList.add('hidden');
-            if (typeof window.renderApp === "function") window.renderApp();
         }
-    });
-    // [FIM DO BLOCO - LOGIN E SESSÃO SUPABASE]
+        
+        const btnCriarConta = document.getElementById('btnCriarConta');
+        if (btnCriarConta) {
+            btnCriarConta.addEventListener('click', () => {
+                const em = document.getElementById('loginEmail').value;
+                const pw = document.getElementById('loginPassword').value;
+                if(em && pw) window.cadastrarUsuario(em, pw);
+                else alert("Preencha e-mail e senha para criar a conta!");
+            });
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            const loginScreen = document.getElementById('loginScreen'); const appContainer = document.getElementById('appContainer');
+            if (user) {
+                loginScreen.classList.add('hidden'); appContainer.classList.remove('hidden');
+                if (window.carregarTransactionsDoFirestore) window.carregarTransactionsDoFirestore();
+                if (window.carregarAppointmentsDoFirestore) window.carregarAppointmentsDoFirestore();
+                if (window.carregarCrewDoFirestore) window.carregarCrewDoFirestore();
+                if (window.carregarCRMDoFirestore) window.carregarCRMDoFirestore();
+            } else {
+                loginScreen.classList.remove('hidden'); appContainer.classList.add('hidden');
+                if (typeof window.renderApp === "function") window.renderApp();
+            }
+            
+        });
         // ==========================================
 // MÓDULO: CÉREBRO COGNITIVO (Function Calling)
 // ==========================================
@@ -6374,5 +6339,3 @@ window.finishCampaign = function() {
 <!-- FIM: Modal de Sistema Mestre -->
 </body>
 </html>
-
-"top"
