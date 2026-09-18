@@ -437,6 +437,36 @@ window.deleteGdeTransaction = function(id) {
 
 window.switchTab = function(tab) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    let targetId = 'view' + tab.charAt(0).toUpperCase() + tab.slice(1); 
+    if (tab === 'crm') targetId = 'viewCRM';
+    if (tab === 'clientes') targetId = 'viewClientes';
+    if (tab === 'crew') targetId = 'viewCrew';
+    if (tab === 'tecnica') targetId = 'viewTecnica';
+    if (tab === 'manual') targetId = 'viewManual';
+    
+    const view = document.getElementById(targetId); 
+    if(view) view.classList.remove('hidden');
+    
+    const btnNormal = "w-full flex items-center gap-4 h-[60px] px-4 rounded-[18px] hover:bg-[#2C1013] text-[#B7B7B7] hover:text-[#D9111F] transition group";
+    const btnActive = "w-full flex items-center gap-4 h-[60px] px-4 rounded-[18px] bg-[#D9111F] text-white shadow-[0_0_15px_rgba(217,17,31,0.4)] transition group";
+    
+    ['btnTabDashboard', 'btnTabFinanceiro', 'btnTabAgenda', 'btnTabClientes', 'btnTabCRM', 'btnTabJuridico', 'btnTabTecnica', 'btnTabCrew', 'btnTabManual'].forEach(id => { 
+        const el = document.getElementById(id); 
+        if(el) { el.className = btnNormal; el.style.background = ""; } 
+    });
+    
+    let activeBtnId = 'btnTab' + tab.charAt(0).toUpperCase() + tab.slice(1); 
+    if (tab === 'crm') activeBtnId = 'btnTabCRM';
+    if (tab === 'clientes') activeBtnId = 'btnTabClientes';
+    if (tab === 'crew') activeBtnId = 'btnTabCrew';
+    
+    const activeBtn = document.getElementById(activeBtnId); 
+    if(activeBtn) activeBtn.className = btnActive;
+    
+    if(tab === 'crm' && typeof window.renderCampaignsLobby === 'function') window.renderCampaignsLobby();
+    if(typeof window.renderApp === 'function') window.renderApp();
+};
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     let targetId = 'view' + tab.charAt(0).toUpperCase() + tab.slice(1); if (tab === 'crm') targetId = 'viewCRM';
     const view = document.getElementById(targetId); if(view) view.classList.remove('hidden');
     
